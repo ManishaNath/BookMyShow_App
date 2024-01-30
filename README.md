@@ -1,5 +1,7 @@
-**Entity-Relationship (ER) Diagram:**
-*Entities and Attributes:*
+# Bookmyshow case study II
+
+## Part 1: Table Structure
+### Entity and Attributes:
 
 **Theatre:**
 Attributes: Theatre_ID (Primary Key), Theatre_name
@@ -25,7 +27,7 @@ Attributes: Seat_ID (Primary Key), Row, Number, Status
 **ShowTable:**
 Attributes: Show_ID (Primary Key), Show_date, Show_Time, Movie_ID (Foreign Key referencing Movie), Theatre_ID (Foreign Key referencing Theatre)
 
-**Associations:**
+### Associations:
 *Seat to Screen (1:M):*
 Seat belongs to Screen (Foreign Key: Screen_ID)
 Screen has many Seat (Foreign Key: Screen_ID)
@@ -58,7 +60,7 @@ ShowTable has one Movie (Foreign Key: Movie_ID)
 Movie belongs to ShowTable
 
 
-**Part 2: Indexing for Performance**
+## Part 2: Indexing for Performance**
 If the API is slow, indexing can significantly improve performance. For the given scenario,we can consider indexing the following columns:
 
 Theatre Name in Theatre table: To quickly locate theatres by name.
@@ -70,23 +72,30 @@ To improve the performance of the API and optimize its speed, we can consider in
 **For ShowTable Table:**
    Index on Theatre_ID and Show_date: This helps speed up queries filtering by theatre and date.
 
+```bash
 SELECT DISTINCT DATE_FORMAT(Show_date, '%Y-%m-%d') AS Show_date
     FROM ShowTable
     WHERE Theatre_ID = :theatreID
       AND Show_date >= CURDATE()
     ORDER BY Show_date ASC
     LIMIT 7;
-
-  --- CREATE INDEX idx_theatre_show_date ON ShowTable (Theatre_ID, Show_date);
-  --- SHOW INDEX from ShowTable;
-  --- EXPLAIN SELECT * FROM ShowTable WHERE Theatre_ID = :theatreID
+```
+```bash
+ CREATE INDEX idx_theatre_show_date ON ShowTable (Theatre_ID, Show_date);
+ ``` 
+```bash
+SHOW INDEX from ShowTable;
+```
+```bash 
+EXPLAIN SELECT * FROM ShowTable WHERE Theatre_ID = :theatreID
       AND Show_date >= CURDATE()
-
+```
 
 
 **For Movie Table:**
    Index on Movie_ID: This helps when joining Movie with ShowTable based on Movie_ID.
 
+```bash
 SELECT
       Movie_name,
       Total_time,
@@ -97,15 +106,26 @@ SELECT
     INNER JOIN ShowTable ON Movie.Movie_ID = ShowTable.Movie_ID
     WHERE ShowTable.Theatre_ID = :theatreID
       AND ShowTable.Show_date = :date;
-  
-  ---- CREATE INDEX idx_movie_id ON Movie (Movie_ID);
-  ----SHOW INDEX from Movie;
-  ----EXPLAIN SELECT * FROM Movie WHERE ShowTable.Theatre_ID = :theatreID
+```  
+```bash
+CREATE INDEX idx_movie_id ON Movie (Movie_ID);
+```
+```bash
+SHOW INDEX from Movie;
+```
+```bash
+EXPLAIN SELECT * FROM Movie WHERE ShowTable.Theatre_ID = :theatreID
       AND ShowTable.Show_date = :date;
+```
+
+
+    
+
 
 **For Theatre Table:**
    Index on Theatre_ID: This helps when joining Theatre with ShowTable based on Theatre_ID.
 
+```bash
 SELECT
       ShowTable.Show_date,
       ShowTable.Show_Time,
@@ -116,12 +136,18 @@ SELECT
     INNER JOIN Theatre ON ShowTable.Theatre_ID = Theatre.Theatre_ID
     WHERE ShowTable.Show_date = :date
       AND ShowTable.Theatre_ID = :theatreID;
+```
 
-  --- CREATE INDEX idx_theatre_id ON Theatre (Theatre_ID);
-  --- SHOW INDEX from Theatre;
-  --- EXPLAIN SELECT * FROM ShowTable WHERE ShowTable.Show_date = :date
+```bash
+CREATE INDEX idx_theatre_id ON Theatre (Theatre_ID);
+```
+```bash
+SHOW INDEX from Theatre;
+```
+```bash
+ EXPLAIN SELECT * FROM ShowTable WHERE ShowTable.Show_date = :date
       AND ShowTable.Theatre_ID = :theatreID;
-
+```
 
 **Other Considerations:**
 Check the foreign key relationships and consider indexing columns involved in joins.
@@ -136,11 +162,11 @@ Maintenance overhead as can’t be managed via ORM’s
 Additional storage space required
 
 
-**Reddis:  caching data in Redis to improve API speed**
+## Reddis:  caching data in Redis to improve API speed
 
 In this application, I have implemented Redis as an in-memory cache to store API responses. The middleware checks whether the requested data is present in the cache. If it is, it sends the cached data; otherwise, it proceeds to the next middleware, which fetches the data from the database. The fetched data is then stored in the Redis cache for future use.
 
-**Why Caching is important:**
+### **Why Caching is important:**
 
 *Frequently Accessed Data:*
 Cache lists of theaters, movies, and show details that are frequently accessed.
