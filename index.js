@@ -75,6 +75,7 @@ app.get("/api", (req, res) => {
   res.send("Welcome to BookMyShow Application");
 });
 
+// To avoid deadlock error in db
 async function addForeignKeyConstraint() {
   try {
     await sequelize.query(
